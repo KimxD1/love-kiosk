@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>사랑의 카페</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* 사랑의 카페 - 따뜻한 골드 + 핑크 하트 포인트 컬러 팔레트 */
+    --bg-page: #f1d9b2;
+    --bg-card: #FFFFFF;
+    --primary: #FFC94A;
+    --primary-press: #E6AE2A;
+    --secondary: #FFE9B8;
+    --secondary-press: #F5D488;
+    --accent: #FF6B81;        /* 하트 포인트 핑크 */
+    --accent-press: #E24D64;
+    --text-dark: #4A3226;
+    --text-mid: #9C8570;
+    --border-color: #F0CF65;
+    --radius: 24px;
+    --shadow: 0 8px 20px rgba(212, 160, 23, 0.15);
+    --btn-shadow: 0 6px 0px #DDA800;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;width:100%;height:100%;overscroll-behavior:none;}
+  body{
+    background: var(--bg-page);
+    font-family:'Gowun Dodum','Noto Sans KR',sans-serif;
+    display:flex; align-items:stretch; justify-content:center;
+    min-height:100dvh; color: var(--text-dark);
+  }
+
+  .app{
+    position:relative; width:100%; max-width:820px; min-height:100dvh;
+    background: var(--bg-page); display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  .screen{
+    position:absolute; inset:0; display:none; flex-direction:column;
+    padding: clamp(20px, 4vh, 40px) clamp(20px, 5vw, 48px);
+    animation: fadeIn .3s ease-out;
+  }
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0; transform: scale(0.98);} to{opacity:1; transform: scale(1);}}
+
+  h1,h2,.headline{font-family:'Jua',sans-serif; color:var(--text-dark); margin:0; line-height:1.35;}
+
+  .status-bar{display:flex; gap:clamp(12px, 2vw, 18px); margin-bottom:clamp(16px, 2.5vh, 24px);}
+  .status-chip{
+    flex:1; background:var(--bg-card); border-radius:var(--radius);
+    padding:clamp(14px, 2vh, 20px) clamp(12px, 2vw, 18px); text-align:center;
+    border: 3px solid var(--border-color); box-shadow: var(--shadow);
+  }
+  .status-chip .label{font-size:clamp(14px, 1.8vh, 18px); color:var(--text-mid); font-weight: bold;}
+  .status-chip .value{font-family:'Jua',sans-serif; font-size:clamp(22px, 3.5vh, 30px); color:var(--accent); margin-top:2px;}
+  .grow{flex:1;}
+
+  .back-btn{
+    position:absolute; top:clamp(16px, 3vh, 24px); left:clamp(16px, 4vw, 24px);
+    width:clamp(52px, 8vh, 64px); height:clamp(52px, 8vh, 64px); border-radius:50%;
+    background:var(--bg-card); border: 3px solid var(--border-color);
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:clamp(24px, 3.5vh, 32px); line-height:1; color:var(--text-dark);
+    display:flex; align-items:center; justify-content:center; padding:2px 0 0 2px;
+    z-index:5; cursor:pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    transition: transform .1s ease, background .15s ease; touch-action:manipulation;
+  }
+  .back-btn:active{transform:scale(0.9); background:var(--secondary);}
+
+  .box-btn{
+    border: 3px solid #DDA800; border-radius:var(--radius); font-family:'Jua',sans-serif;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px;
+    color:var(--text-dark); box-shadow: var(--btn-shadow);
+    transition: transform .08s ease, box-shadow .08s ease, background-color .12s ease;
+    min-height:clamp(64px, 9vh, 88px); touch-action:manipulation; user-select:none;
+  }
+  .box-btn:active{transform: translateY(4px); box-shadow: 0 2px 0px #DDA800;}
+  .box-btn.primary{background:var(--primary);}
+  .box-btn.secondary{background:var(--secondary); border-color:#E2B022; box-shadow:0 6px 0px #E2B022;}
+  .box-btn.secondary:active{box-shadow:0 2px 0px #E2B022;}
+  .box-btn.accent{background:var(--accent); border-color:#D8425A; color:#FFF; box-shadow:0 6px 0px #D8425A;}
+  .box-btn.accent:active{box-shadow:0 2px 0px #D8425A;}
+  .box-btn.dark{background:var(--text-dark); border-color:#2D2018; color:#FFF; box-shadow:0 6px 0px #2D2018;}
+  .box-btn.dark:active{box-shadow:0 2px 0px #2D2018;}
+  .box-btn:disabled{background:#E6DFCE; border-color:#C5BDAB; color:#AA9F8C; box-shadow:0 6px 0px #C5BDAB; cursor:not-allowed;}
+  .box-btn:disabled:active{transform:none; box-shadow:0 6px 0px #C5BDAB;}
+
+  /* ---------------- 화면 1. 시작 화면 ---------------- */
+  #screen-start{align-items:center; justify-content:space-around; text-align:center; padding: clamp(24px, 4vh, 50px) clamp(16px, 5vw, 40px);}
+
+  .start-welcome-badge{
+    display:inline-block; background:var(--accent); color:#FFF; font-family:'Jua',sans-serif;
+    font-size:clamp(18px, 3.2vh, 26px); padding:8px 24px; border-radius:50px; margin-bottom:10px;
+    box-shadow:0 4px 10px rgba(255,107,129,0.35); animation: badgeBounce 2s infinite ease-in-out;
+  }
+  @keyframes badgeBounce{0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);}}
+
+  .signboard-wrap{width:100%; max-width:760px; margin:0 auto;}
+  .signboard-wiggle{animation: signWiggle 4.2s ease-in-out infinite; transform-origin:50% 85%;}
+  @keyframes signWiggle{0%,100%{transform:rotate(-1.4deg);} 50%{transform:rotate(1.4deg);}}
+  .signboard-frame{
+    background: var(--bg-page);
+    border-radius: 32px;
+    padding: clamp(10px, 2vw, 20px);
+    box-shadow: none;
+    animation: signBeat 1.8s ease-in-out infinite;
+  }
+  @keyframes signBeat{
+    0%,100%{transform:scale(1);} 14%{transform:scale(1.045);} 28%{transform:scale(1);}
+    42%{transform:scale(1.03);} 70%{transform:scale(1);}
+  }
+  .signboard-frame img{width:100%; height:auto; display:block; object-fit:contain;}
+  .sign-fallback{
+    padding: clamp(40px, 8vh, 70px) 20px; text-align:center; font-family:'Jua',sans-serif;
+    font-size:clamp(24px, 4vh, 34px); color:var(--text-mid); line-height:1.6;
+  }
+
+  .start-sub{font-size:clamp(16px, 2.6vh, 21px); color:var(--text-mid); font-weight:bold; margin-top:4px;}
+  .start-cta{width:100%; max-width:480px; font-size:clamp(24px, 4.2vh, 34px); padding:0 20px;}
+
+  /* ---------------- 화면 2. 메뉴 선택 ---------------- */
+  #screen-menu{padding-bottom:0;}
+  .menu-header{text-align:center; margin-top:clamp(40px, 6vh, 56px); margin-bottom:clamp(10px, 1.8vh, 16px);}
+  .menu-tabs{display:flex; gap:10px; margin-bottom:clamp(10px, 2vh, 16px);}
+  .menu-tab{
+    flex:1; text-align:center; padding:clamp(12px, 2vh, 16px) 8px; border-radius:18px;
+    border:3px solid var(--border-color); background:var(--bg-card); font-family:'Jua',sans-serif;
+    font-size:clamp(17px, 2.8vh, 22px); color:var(--text-mid); cursor:pointer; touch-action:manipulation;
+    transition: background .12s ease, color .12s ease;
+  }
+  .menu-tab.active{background:var(--primary); color:var(--text-dark); border-color:#DDA800;}
+
+  .menu-scroll{flex:1; overflow-y:auto; padding-bottom:14px; -webkit-overflow-scrolling:touch;}
+  .prod-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:clamp(10px, 2vw, 16px);}
+  @media (min-width:560px){.prod-grid{grid-template-columns:repeat(3, 1fr);}}
+
+  .prod-card{
+    background:var(--bg-card); border:3px solid var(--border-color); border-radius:20px;
+    padding:clamp(10px, 1.6vh, 14px); box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center;
+  }
+  .prod-img-wrap{
+    width:100%; aspect-ratio:1/1; background:var(--secondary); border-radius:14px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:8px;
+  }
+  .prod-img-wrap img{width:100%; height:100%; object-fit:contain;}
+  .prod-emoji{font-size:clamp(30px, 6vh, 44px);}
+  .prod-name{font-size:clamp(14px, 2vh, 17px); font-weight:bold; text-align:center; line-height:1.25; min-height:2.5em; display:flex; align-items:center;}
+  .prod-price{font-family:'Jua',sans-serif; font-size:clamp(15px, 2.4vh, 19px); color:var(--accent); margin:2px 0 8px;}
+  .prod-qty{display:flex; align-items:center; gap:8px;}
+  .qty-btn{
+    width:clamp(32px, 5vh, 40px); height:clamp(32px, 5vh, 40px); border-radius:50%;
+    border:2px solid #DDA800; background:var(--primary); font-family:'Jua',sans-serif;
+    font-size:clamp(16px, 2.6vh, 20px); color:var(--text-dark); cursor:pointer; touch-action:manipulation;
+    display:flex; align-items:center; justify-content:center; line-height:1;
+  }
+  .qty-btn:disabled{background:#EEE7D8; border-color:#D8D0BC; color:#B8AE99;}
+  .qty-btn:active{transform:scale(0.9);}
+  .qty-val{font-family:'Jua',sans-serif; font-size:clamp(16px, 2.6vh, 20px); min-width:1.4em; text-align:center;}
+
+  .menu-bar{
+    display:flex; align-items:center; gap:12px; padding:clamp(12px, 2vh, 18px) clamp(16px, 4vw, 32px);
+    padding-bottom:calc(clamp(12px, 2vh, 18px) + env(safe-area-inset-bottom));
+    background:var(--bg-card); border-top:3px solid var(--border-color); box-shadow:0 -8px 16px rgba(0,0,0,0.06);
+  }
+  .menu-bar-info{flex:1;}
+  .menu-bar-info .label{font-size:clamp(13px, 1.8vh, 16px); color:var(--text-mid); font-weight:bold;}
+  .menu-bar-info .value{font-family:'Jua',sans-serif; font-size:clamp(20px, 3.2vh, 26px); color:var(--accent);}
+  .menu-bar .box-btn{min-height:clamp(56px, 8vh, 72px); font-size:clamp(18px, 3vh, 24px); padding:0 clamp(20px, 4vw, 32px); flex-shrink:0;}
+
+  .modal-overlay{
+    position:absolute; inset:0; background:rgba(74,50,38,0.5); z-index:50;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .modal-box{
+    background:var(--bg-card); border-radius:28px; border:4px solid var(--border-color);
+    box-shadow:0 20px 40px rgba(0,0,0,0.25); padding:clamp(26px, 4.5vh, 42px);
+    max-width:420px; width:100%; text-align:center;
+  }
+  .modal-icon{font-size:clamp(40px, 7vh, 58px); margin-bottom:10px;}
+  .modal-text{font-family:'Jua',sans-serif; font-size:clamp(19px, 3.2vh, 25px); line-height:1.5; color:var(--text-dark); margin-bottom:22px;}
+  .modal-box .box-btn{width:100%; font-size:clamp(18px, 3vh, 24px);}
+
+  /* ---------------- 화면 3. 주문 확인(장바구니) ---------------- */
+  #screen-cart{justify-content:flex-start;}
+  .cart-title{font-size:clamp(22px, 3.8vh, 30px); text-align:center; margin:clamp(48px, 8vh, 68px) 0 clamp(14px, 2.5vh, 20px);}
+  .cart-scroll{flex:1; overflow-y:auto; margin-bottom:12px;}
+  .cart-row{
+    display:flex; align-items:center; gap:8px; background:var(--bg-card); border:2px solid var(--border-color);
+    border-radius:16px; padding:clamp(12px, 2vh, 16px); margin-bottom:10px; box-shadow:var(--shadow);
+  }
+  .cart-row-name{flex:1; font-weight:bold; font-size:clamp(15px, 2.4vh, 19px);}
+  .cart-row-qty{color:var(--text-mid); font-size:clamp(14px, 2vh, 17px);}
+  .cart-row-price{font-family:'Jua',sans-serif; color:var(--accent); font-size:clamp(15px, 2.4vh, 19px); min-width:4.5em; text-align:right;}
+  .cart-empty{text-align:center; color:var(--text-mid); font-size:clamp(16px, 2.6vh, 20px); padding:40px 0;}
+
+  .cart-total-box{
+    background:var(--bg-card); border-radius:var(--radius); border:3px solid var(--border-color);
+    box-shadow:var(--shadow); padding:clamp(14px, 2.2vh, 20px); text-align:center; margin-bottom:12px;
+  }
+  .cart-total-box .label{font-size:clamp(15px, 2vh, 19px); color:var(--text-mid); font-weight:bold;}
+  .cart-total-box .amount{font-family:'Jua',sans-serif; font-size:clamp(28px, 5vh, 40px); color:var(--accent); margin-top:2px;}
+  .cart-actions{display:flex; gap:12px;}
+  .cart-actions .box-btn{flex:1; font-size:clamp(20px, 3.5vh, 26px);}
+
+  /* ---------------- 화면 4. 결제 방법 선택 ---------------- */
+  #screen-confirm{justify-content:flex-start;}
+  .confirm-title{font-size:clamp(22px, 3.8vh, 30px); text-align:center; margin:clamp(16px, 3vh, 28px) 0 clamp(16px, 3vh, 24px);}
+  .method-btn{width:100%; font-size:clamp(22px, 3.8vh, 30px); margin-bottom:clamp(16px, 2.5vh, 22px); padding:0 20px;}
+  .method-icon{font-size:clamp(28px, 5vh, 40px);}
+
+  /* ---------------- 카드/현금 공통 ---------------- */
+  .center-screen{align-items:center; justify-content:center; text-align:center; gap:clamp(16px, 3vh, 24px);}
+  .pay-card-box{
+    background:#FFF; width:100%; border-radius:32px; padding:clamp(24px, 4vh, 40px);
+    border:4px solid var(--border-color); box-shadow:var(--shadow);
+    display:flex; flex-direction:column; align-items:center; gap:16px;
+  }
+  .pay-title{font-size:clamp(24px, 4vh, 32px);}
+  .pay-desc{font-size:clamp(18px, 3vh, 24px); color:var(--text-mid); line-height:1.5; font-weight:bold;}
+  .pay-amount{font-family:'Jua',sans-serif; font-size:clamp(34px, 6.5vh, 48px); color:var(--accent);}
+  .tag-icon{font-size:clamp(60px, 11vh, 90px);}
+  .sim-btn{width:100%; max-width:400px; font-size:clamp(20px, 3.5vh, 26px);}
+  .pulse{animation:pulse 1.4s infinite ease-in-out;}
+  @keyframes pulse{0%,100%{transform:scale(1);} 50%{transform:scale(1.1);}}
+
+  /* ---------------- 서명 ---------------- */
+  #screen-signature{justify-content:flex-start;}
+  .sig-title{font-size:clamp(22px, 3.8vh, 30px); text-align:center; margin:clamp(16px, 3vh, 26px) 0 clamp(12px, 2vh, 18px);}
+  .sig-pad-wrap{
+    flex:1; background:var(--bg-card); border-radius:var(--radius); border:4px dashed var(--accent);
+    overflow:hidden; margin-bottom:clamp(14px, 2.5vh, 20px); position:relative; min-height:180px; box-shadow:var(--shadow);
+  }
+  #sigCanvas{width:100%; height:100%; display:block; touch-action:none;}
+  .sig-hint{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--text-mid); font-size:clamp(16px, 2.5vh, 20px); font-weight:bold; pointer-events:none;}
+  .sig-actions{display:flex; gap:clamp(12px, 2vw, 18px);}
+  .sig-actions .box-btn{flex:1; font-size:clamp(20px, 3.5vh, 26px);}
+
+  /* ---------------- 완료 ---------------- */
+  .complete-icon{font-size:clamp(56px, 10vh, 90px);}
+  .complete-title{font-size:clamp(24px, 4.2vh, 34px);}
+  .complete-sub{font-size:clamp(18px, 3vh, 24px); color:var(--text-mid); font-weight:bold;}
+  .complete-info{display:flex; gap:clamp(12px, 2vw, 18px); width:100%; margin-top:8px;}
+  .restart-btn{width:100%; margin-top:10px; font-size:clamp(20px, 3.5vh, 26px);}
+
+  @media (orientation: landscape) and (max-height: 620px){
+    .tag-icon{font-size:clamp(44px, 8vh, 66px);}
+    .complete-icon{font-size:clamp(44px, 8vh, 66px);}
+    .signboard-wrap{max-width:520px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= 화면 1. 시작 화면 ================= -->
+  <div class="screen active" id="screen-start">
+    <div class="start-welcome-badge">어서오세요!</div>
+
+    <div class="signboard-wrap">
+      <div class="signboard-wiggle">
+        <div class="signboard-frame">
+          <img src="images/sign/love-cafe-sign.png" alt="사랑의 카페" id="signImg" style="display:none"
+               onload="this.style.display='block'; document.getElementById('signFallback').style.display='none';">
+          <div class="sign-fallback" id="signFallback">💛<br>사랑의 카페</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="start-sub">사랑의 카페에 오신 것을 환영합니다!</div>
+
+    <button class="box-btn primary start-cta" onclick="startOrder()">주문 시작하기 ➔</button>
+  </div>
+
+  <!-- ================= 화면 2. 메뉴 선택 ================= -->
+  <div class="screen" id="screen-menu">
+    <button class="back-btn" onclick="goTo('screen-start')">‹</button>
+    <div class="menu-header">
+      <h2>사랑의 카페</h2>
+    </div>
+    <div class="menu-tabs">
+      <div class="menu-tab active" data-tab="snacks" onclick="switchTab('snacks')">🍪 과자</div>
+      <div class="menu-tab" data-tab="drinks" onclick="switchTab('drinks')">🥤 음료</div>
+    </div>
+    <div class="menu-scroll">
+      <div class="prod-grid" id="menuGrid"></div>
+    </div>
+    <div class="menu-bar">
+      <div class="menu-bar-info">
+        <div class="label">담은 메뉴</div>
+        <div class="value"><span id="menuBarCount">0개</span> · <span id="menuBarTotal">0원</span></div>
+      </div>
+      <button class="box-btn primary" id="menuBarBtn" onclick="goToCart()" disabled>주문 확인 ➔</button>
+    </div>
+
+    <div class="modal-overlay" id="menuNoticeModal" style="display:none;">
+      <div class="modal-box">
+        <div class="modal-icon">🍪🥤</div>
+        <div class="modal-text">과자 두 가지와<br>음료 한 가지를 골라주세요.</div>
+        <button class="box-btn primary" onclick="closeMenuNotice()">확인했어요!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 화면 3. 주문 확인(장바구니) ================= -->
+  <div class="screen" id="screen-cart">
+    <button class="back-btn" onclick="backToMenu()">‹</button>
+    <h2 class="cart-title">주문을 확인해주세요</h2>
+    <div class="cart-scroll" id="cartList"></div>
+    <div class="cart-total-box">
+      <div class="label">총 결제 금액</div>
+      <div class="amount" id="cartTotal">0원</div>
+    </div>
+    <div class="cart-actions">
+      <button class="box-btn secondary" onclick="backToMenu()">주문 수정</button>
+      <button class="box-btn primary" onclick="goTo('screen-confirm')">결제하기 ➔</button>
+    </div>
+  </div>
+
+  <!-- ================= 화면 4. 결제 방법 선택 ================= -->
+  <div class="screen" id="screen-confirm">
+    <button class="back-btn" onclick="goTo('screen-cart')">‹</button>
+    <div class="status-bar" style="margin-top:clamp(48px, 9vh, 72px);">
+      <div class="status-chip">
+        <div class="label">주문 개수</div>
+        <div class="value" id="confirmCount">0개</div>
+      </div>
+      <div class="status-chip">
+        <div class="label">총 결제 금액</div>
+        <div class="value" id="confirmPrice">0원</div>
+      </div>
+    </div>
+    <h2 class="confirm-title">어떻게 결제할까요?</h2>
+    <button class="box-btn primary method-btn" onclick="startCard()">
+      <span class="method-icon">💳</span> 카드 결제
+    </button>
+    <button class="box-btn secondary method-btn" onclick="goTo('screen-cash')">
+      <span class="method-icon">💵</span> 현금 결제
+    </button>
+  </div>
+
+  <!-- ================= 화면 5-A. 카드 결제 ================= -->
+  <div class="screen center-screen" id="screen-card">
+    <button class="back-btn" onclick="leaveCardScreen()">‹</button>
+    <div class="pay-card-box">
+      <h2 class="pay-title">카드 결제</h2>
+      <div class="tag-icon pulse" id="cardTagIcon">💳</div>
+      <div class="pay-desc" id="cardPayDesc">카드를 결제기에<br>콕! 태그해주세요</div>
+      <div class="pay-amount" id="cardAmount">0원</div>
+    </div>
+  </div>
+
+  <!-- ================= 화면 5-B. 서명 ================= -->
+  <div class="screen" id="screen-signature">
+    <h2 class="sig-title">멋지게 서명해주세요! ✍️</h2>
+    <div class="sig-pad-wrap">
+      <canvas id="sigCanvas"></canvas>
+      <div class="sig-hint" id="sigHint">여기에 손가락으로 이름을 써보세요</div>
+    </div>
+    <div class="sig-actions">
+      <button class="box-btn secondary" onclick="clearSignature()">다시 쓰기</button>
+      <button class="box-btn primary" onclick="finishPayment()">완료!</button>
+    </div>
+  </div>
+
+  <!-- ================= 화면 6. 현금 결제 ================= -->
+  <div class="screen center-screen" id="screen-cash">
+    <button class="back-btn" onclick="goTo('screen-confirm')">‹</button>
+    <div class="pay-card-box">
+      <h2 class="pay-title">현금 결제</h2>
+      <div class="tag-icon">💵</div>
+      <div class="pay-amount" id="cashAmount">0원</div>
+      <div class="pay-desc">직원에게 현금을<br>전달해주세요</div>
+      <button class="box-btn dark sim-btn" onclick="finishPayment()">결제 완료</button>
+    </div>
+  </div>
+
+  <!-- ================= 화면 7. 결제 완료 ================= -->
+  <div class="screen center-screen" id="screen-complete">
+    <div class="pay-card-box">
+      <div class="complete-icon">🎉</div>
+      <h2 class="complete-title">결제가 완료되었습니다!</h2>
+      <div class="complete-sub">맛있게 드세요! 🍪🥤💕</div>
+      <div class="complete-info">
+        <div class="status-chip grow">
+          <div class="label">주문 개수</div>
+          <div class="value" id="doneCount">0개</div>
+        </div>
+        <div class="status-chip grow">
+          <div class="label">결제 금액</div>
+          <div class="value" id="donePrice">0원</div>
+        </div>
+      </div>
+      <button class="box-btn primary restart-btn" onclick="resetAll()">처음으로 돌아가기</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= 화면별 안내 음성 (파일이 없으면 조용히 무시됩니다) ================= -->
+<audio id="audio-screen-start" src="audio/01_어서오세요_사랑의_카페에_오신_것을_환영합니다.mp3" preload="auto"></audio>
+<audio id="audio-screen-menu" src="audio/02_과자_두_가지와_음료_한_가지를_골라주세요.mp3" preload="auto"></audio>
+<audio id="audio-screen-cart" src="audio/03_주문한_간식이_맞는지_확인해주세요.mp3" preload="auto"></audio>
+<audio id="audio-screen-confirm" src="audio/04_어떻게_결제할까요.mp3" preload="auto"></audio>
+<audio id="audio-screen-cash" src="audio/05_직원에게_현금을_전달해주세요.mp3" preload="auto"></audio>
+<audio id="audio-screen-card" src="audio/06_카드를_결제기에_콕_태그해주세요.mp3" preload="auto"></audio>
+<audio id="audio-screen-signature" src="audio/07_멋지게_서명해주세요.mp3" preload="auto"></audio>
+<audio id="audio-screen-complete" src="audio/08_결제가_완료되었습니다_맛있게_드세요.mp3" preload="auto"></audio>
+
+<script>
+  /* =================================================================
+     상품 데이터 (여기서만 관리 - "과자 하나 추가해줘" 하면 이 목록만 수정합니다)
+     image 파일이 images/snacks/아이디.png 또는 images/drinks/아이디.png 로
+     존재하면 자동으로 그 이미지가 나타나고, 없으면 이모지가 보입니다.
+  ================================================================= */
+  const SNACKS = [
+    { id:'snack-01', name:'마가렛트',           price:1000, emoji:'🍪' },
+    { id:'snack-02', name:'비쵸비',             price:1000, emoji:'🍫' },
+    { id:'snack-03', name:'오뜨 치즈',           price:1000, emoji:'🧀' },
+    { id:'snack-04', name:'참붕어빵',           price:1000, emoji:'🐟' },
+    { id:'snack-05', name:'카스타드 우유크림',  price:1000, emoji:'🥛' },
+  ];
+
+  const DRINKS = [
+    { id:'drink-01', name:'주스',   price:1000, emoji:'🧃' },
+    { id:'drink-02', name:'커피',   price:1000, emoji:'☕' },
+    { id:'drink-03', name:'물',     price:1000, emoji:'💧' },
+  ];
+
+  /* =================================================================
+     상태 & 유틸
+  ================================================================= */
+  let cart = {};        // { 'snack-01': 2, 'drink-03': 1, ... }
+  let activeTab = 'snacks';
+
+  function fmt(n){ return n.toLocaleString('ko-KR') + '원'; }
+
+  function allItems(){
+    return [
+      ...SNACKS.map(i => ({...i, cat:'snacks'})),
+      ...DRINKS.map(i => ({...i, cat:'drinks'})),
+    ];
+  }
+  function getItem(id){ return allItems().find(i => i.id === id); }
+  function cartTotal(){ return Object.entries(cart).reduce((sum,[id,qty]) => sum + getItem(id).price*qty, 0); }
+  function cartCount(){ return Object.values(cart).reduce((a,b) => a+b, 0); }
+  function cartSnackCount(){ return Object.entries(cart).filter(([id]) => id.startsWith('snack-')).reduce((s,[,q]) => s+q, 0); }
+  function cartDrinkCount(){ return Object.entries(cart).filter(([id]) => id.startsWith('drink-')).reduce((s,[,q]) => s+q, 0); }
+  const SNACK_TARGET = 2;
+  const DRINK_TARGET = 1;
+
+  /* =================================================================
+     화면 전환 & 음성 안내
+  ================================================================= */
+  const screenAudioMap = {
+    'screen-start':'audio-screen-start', 'screen-menu':'audio-screen-menu',
+    'screen-cart':'audio-screen-cart', 'screen-confirm':'audio-screen-confirm',
+    'screen-cash':'audio-screen-cash', 'screen-card':'audio-screen-card',
+    'screen-signature':'audio-screen-signature', 'screen-complete':'audio-screen-complete'
+  };
+
+  function playScreenAudio(id){
+    document.querySelectorAll('audio').forEach(a => { a.pause(); a.currentTime = 0; });
+    const audioId = screenAudioMap[id];
+    const audio = audioId && document.getElementById(audioId);
+    if(audio){
+      audio.currentTime = 0;
+      audio.play().catch(() => { /* 자동재생 정책으로 막힌 경우 조용히 무시 */ });
+    }
+  }
+
+  function goTo(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id === 'screen-confirm' || id === 'screen-cash'){ syncStatusEverywhere(); }
+    playScreenAudio(id);
+  }
+
+  function startOrder(){
+    goTo('screen-menu');
+    renderMenuGrid();
+    showMenuNotice();
+  }
+
+  function showMenuNotice(){
+    document.getElementById('menuNoticeModal').style.display = 'flex';
+  }
+
+  function closeMenuNotice(){
+    document.getElementById('menuNoticeModal').style.display = 'none';
+  }
+
+  function backToMenu(){
+    goTo('screen-menu');
+    renderMenuGrid();
+  }
+
+  /* =================================================================
+     화면 2. 메뉴 선택
+  ================================================================= */
+  function switchTab(tab){
+    activeTab = tab;
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    renderMenuGrid();
+  }
+
+  function renderMenuGrid(){
+    const list = activeTab === 'snacks' ? SNACKS : DRINKS;
+    const target = activeTab === 'snacks' ? SNACK_TARGET : DRINK_TARGET;
+    const catCount = activeTab === 'snacks' ? cartSnackCount() : cartDrinkCount();
+    const limitReached = catCount >= target;
+    document.getElementById('menuGrid').innerHTML = list.map(item => productCardHTML(item, activeTab, limitReached)).join('');
+    updateMenuBar();
+  }
+
+  function productCardHTML(item, cat, limitReached){
+    const qty = cart[item.id] || 0;
+    return `<div class="prod-card">
+      <div class="prod-img-wrap">
+        <img src="images/${cat}/${item.id}.png" alt="${item.name}" style="display:none"
+             onload="this.style.display='block'; this.nextElementSibling.style.display='none';">
+        <div class="prod-emoji">${item.emoji}</div>
+      </div>
+      <div class="prod-name">${item.name}</div>
+      <div class="prod-price">${fmt(item.price)}</div>
+      <div class="prod-qty">
+        <button class="qty-btn" onclick="changeQty('${item.id}',-1)" ${qty===0?'disabled':''}>−</button>
+        <span class="qty-val">${qty}</span>
+        <button class="qty-btn plus" onclick="changeQty('${item.id}',1)" ${limitReached?'disabled':''}>＋</button>
+      </div>
+    </div>`;
+  }
+
+  function changeQty(id, delta){
+    const cat = id.startsWith('snack-') ? 'snacks' : 'drinks';
+    const target = cat === 'snacks' ? SNACK_TARGET : DRINK_TARGET;
+    const catCount = cat === 'snacks' ? cartSnackCount() : cartDrinkCount();
+    if(delta > 0 && catCount >= target) return; // 정해진 개수에 도달하면 더 담을 수 없음
+    const cur = cart[id] || 0;
+    const next = Math.max(0, cur + delta);
+    if(next === 0){ delete cart[id]; } else { cart[id] = next; }
+    renderMenuGrid();
+  }
+
+  function updateMenuBar(){
+    const snackQty = cartSnackCount();
+    const drinkQty = cartDrinkCount();
+    document.getElementById('menuBarCount').textContent = `과자 ${snackQty}/${SNACK_TARGET} · 음료 ${drinkQty}/${DRINK_TARGET}`;
+    document.getElementById('menuBarTotal').textContent = fmt(cartTotal());
+    document.getElementById('menuBarBtn').disabled = !(snackQty === SNACK_TARGET && drinkQty === DRINK_TARGET);
+  }
+
+  /* =================================================================
+     화면 3. 주문 확인(장바구니)
+  ================================================================= */
+  function goToCart(){
+    renderCartScreen();
+    goTo('screen-cart');
+  }
+
+  function renderCartScreen(){
+    const entries = Object.entries(cart);
+    const box = document.getElementById('cartList');
+    if(entries.length === 0){
+      box.innerHTML = '<div class="cart-empty">담은 메뉴가 없어요 🍪</div>';
+    } else {
+      box.innerHTML = entries.map(([id, qty]) => {
+        const item = getItem(id);
+        return `<div class="cart-row">
+          <span class="cart-row-name">${item.emoji} ${item.name}</span>
+          <span class="cart-row-qty">${qty}개</span>
+          <span class="cart-row-price">${fmt(item.price*qty)}</span>
+        </div>`;
+      }).join('');
+    }
+    document.getElementById('cartTotal').textContent = fmt(cartTotal());
+  }
+
+  /* =================================================================
+     화면 4~7. 결제 (기존 열매 ㄱㄴㄷ 뷔페의 NFC/서명 로직을 그대로 재사용)
+  ================================================================= */
+  function syncStatusEverywhere(){
+    const total = cartTotal();
+    const count = cartCount();
+    document.getElementById('confirmCount').textContent = count + '개';
+    document.getElementById('confirmPrice').textContent = fmt(total);
+    document.getElementById('cardAmount').textContent = fmt(total);
+    document.getElementById('cashAmount').textContent = fmt(total);
+    document.getElementById('doneCount').textContent = count + '개';
+    document.getElementById('donePrice').textContent = fmt(total);
+  }
+
+  function startCard(){
+    syncStatusEverywhere();
+    goTo('screen-card');
+    startNfcScan();
+  }
+
+  /* ---- 실제 NFC 카드 태그 감지 (Web NFC API) ----
+     ⚠️ 이것은 "NFC 태그 인식"이지 실제 신용카드 결제가 아닙니다.
+     Android + Chrome + HTTPS 환경에서만 동작하며, 결제 체험 용도입니다. */
+  let nfcAbortController = null;
+  let tagProcessed = false;
+
+  function resetCardScreenMessage(){
+    const desc = document.getElementById('cardPayDesc');
+    const icon = document.getElementById('cardTagIcon');
+    if(desc) desc.innerHTML = '카드를 결제기에<br>콕! 태그해주세요';
+    if(icon) icon.classList.add('pulse');
+  }
+
+  function startNfcScan(){
+    tagProcessed = false;
+    resetCardScreenMessage();
+
+    if(!('NDEFReader' in window)){
+      document.getElementById('cardPayDesc').innerHTML = '이 기기에서는 NFC를<br>사용할 수 없어요. 직원을 불러주세요';
+      document.getElementById('cardTagIcon').classList.remove('pulse');
+      return;
+    }
+
+    nfcAbortController = new AbortController();
+    const reader = new NDEFReader();
+
+    reader.scan({ signal: nfcAbortController.signal }).then(() => {
+      reader.onreading = () => {
+        if(tagProcessed) return;
+        tagProcessed = true;
+        cardTagged();
+      };
+      reader.onreadingerror = () => {};
+    }).catch(() => {
+      document.getElementById('cardPayDesc').innerHTML = 'NFC 권한이 필요해요<br>직원을 불러주세요';
+      document.getElementById('cardTagIcon').classList.remove('pulse');
+    });
+  }
+
+  function stopNfcScan(){
+    if(nfcAbortController){ nfcAbortController.abort(); nfcAbortController = null; }
+  }
+
+  function leaveCardScreen(){
+    stopNfcScan();
+    goTo('screen-confirm');
+  }
+
+  function cardTagged(){
+    stopNfcScan();
+    goTo('screen-signature');
+    requestAnimationFrame(() => requestAnimationFrame(setupSignaturePad));
+  }
+
+  function finishPayment(){
+    syncStatusEverywhere();
+    goTo('screen-complete');
+  }
+
+  function resetAll(){
+    cart = {};
+    activeTab = 'snacks';
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'snacks'));
+    goTo('screen-start');
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    renderMenuGrid();
+    playScreenAudio('screen-start');
+  });
+
+  /* ---- 서명 패드 (태블릿 터치 대응) ---- */
+  let sigCtx = null, sigCanvas = null, drawing = false, hasStroke = false, activePointerId = null;
+
+  function setupSignaturePad(){
+    sigCanvas = document.getElementById('sigCanvas');
+    const rect = sigCanvas.getBoundingClientRect();
+    if(rect.width === 0 || rect.height === 0){ requestAnimationFrame(setupSignaturePad); return; }
+
+    const dpr = window.devicePixelRatio || 1;
+    sigCanvas.width = Math.round(rect.width * dpr);
+    sigCanvas.height = Math.round(rect.height * dpr);
+
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sigCtx.lineWidth = 4; sigCtx.lineCap = 'round'; sigCtx.lineJoin = 'round';
+    sigCtx.strokeStyle = '#4A3226';
+
+    hasStroke = false;
+    document.getElementById('sigHint').style.display = 'flex';
+
+    sigCanvas.onpointerdown = handlePointerDown;
+    sigCanvas.onpointermove = handlePointerMove;
+    sigCanvas.onpointerup = handlePointerEnd;
+    sigCanvas.onpointercancel = handlePointerEnd;
+    sigCanvas.onpointerleave = handlePointerEnd;
+  }
+
+  function getPos(e){ const rect = sigCanvas.getBoundingClientRect(); return { x:e.clientX-rect.left, y:e.clientY-rect.top }; }
+
+  function handlePointerDown(e){
+    e.preventDefault(); drawing = true; activePointerId = e.pointerId;
+    try{ sigCanvas.setPointerCapture(e.pointerId); }catch(err){}
+    if(!hasStroke){ hasStroke = true; document.getElementById('sigHint').style.display = 'none'; }
+    const p = getPos(e); sigCtx.beginPath(); sigCtx.moveTo(p.x, p.y);
+  }
+  function handlePointerMove(e){
+    if(!drawing || e.pointerId !== activePointerId) return;
+    e.preventDefault(); const p = getPos(e); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+  }
+  function handlePointerEnd(e){
+    if(e.pointerId !== activePointerId) return; drawing = false; activePointerId = null;
+  }
+  function clearSignature(){
+    if(!sigCtx || !sigCanvas) return;
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    hasStroke = false; document.getElementById('sigHint').style.display = 'flex';
+  }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      const sigScreen = document.getElementById('screen-signature');
+      if(sigScreen.classList.contains('active')){ setupSignaturePad(); }
+    }, 150);
+  });
+</script>
+
+</body>
+</html>
