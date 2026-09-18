@@ -300,7 +300,7 @@
     <div class="modal-overlay" id="menuNoticeModal" style="display:none;">
       <div class="modal-box">
         <div class="modal-icon">🍪🥤</div>
-        <div class="modal-text">과자 두 가지와<br>음료 한 가지를 골라주세요.</div>
+        <div class="modal-text">과자 한두 가지와<br>음료 한 가지를 골라주세요.</div>
         <button class="box-btn primary" onclick="closeMenuNotice()">확인했어요!</button>
       </div>
     </div>
@@ -450,7 +450,8 @@
   function cartCount(){ return Object.values(cart).reduce((a,b) => a+b, 0); }
   function cartSnackCount(){ return Object.entries(cart).filter(([id]) => id.startsWith('snack-')).reduce((s,[,q]) => s+q, 0); }
   function cartDrinkCount(){ return Object.entries(cart).filter(([id]) => id.startsWith('drink-')).reduce((s,[,q]) => s+q, 0); }
-  const SNACK_TARGET = 2;
+  const SNACK_MIN = 1;
+  const SNACK_MAX = 2;
   const DRINK_TARGET = 1;
 
   /* =================================================================
@@ -510,7 +511,7 @@
 
   function renderMenuGrid(){
     const list = activeTab === 'snacks' ? SNACKS : DRINKS;
-    const target = activeTab === 'snacks' ? SNACK_TARGET : DRINK_TARGET;
+    const target = activeTab === 'snacks' ? SNACK_MAX : DRINK_TARGET;
     const catCount = activeTab === 'snacks' ? cartSnackCount() : cartDrinkCount();
     const limitReached = catCount >= target;
     document.getElementById('menuGrid').innerHTML = list.map(item => productCardHTML(item, activeTab, limitReached)).join('');
@@ -537,7 +538,7 @@
 
   function changeQty(id, delta){
     const cat = id.startsWith('snack-') ? 'snacks' : 'drinks';
-    const target = cat === 'snacks' ? SNACK_TARGET : DRINK_TARGET;
+    const target = cat === 'snacks' ? SNACK_MAX : DRINK_TARGET;
     const catCount = cat === 'snacks' ? cartSnackCount() : cartDrinkCount();
     if(delta > 0 && catCount >= target) return; // 정해진 개수에 도달하면 더 담을 수 없음
     const cur = cart[id] || 0;
@@ -549,9 +550,10 @@
   function updateMenuBar(){
     const snackQty = cartSnackCount();
     const drinkQty = cartDrinkCount();
-    document.getElementById('menuBarCount').textContent = `과자 ${snackQty}/${SNACK_TARGET} · 음료 ${drinkQty}/${DRINK_TARGET}`;
+    document.getElementById('menuBarCount').textContent = `과자 ${snackQty}개(1~2) · 음료 ${drinkQty}/${DRINK_TARGET}`;
     document.getElementById('menuBarTotal').textContent = fmt(cartTotal());
-    document.getElementById('menuBarBtn').disabled = !(snackQty === SNACK_TARGET && drinkQty === DRINK_TARGET);
+    const ready = snackQty >= SNACK_MIN && snackQty <= SNACK_MAX && drinkQty === DRINK_TARGET;
+    document.getElementById('menuBarBtn').disabled = !ready;
   }
 
   /* =================================================================
@@ -581,7 +583,7 @@
   }
 
   /* =================================================================
-     화면 4~7. 결제 (기존 열매 ㄱㄴㄷ 뷔페의 NFC/서명 로직을 그대로 재사용)
+     화면 4~7. 결제
   ================================================================= */
   function syncStatusEverywhere(){
     const total = cartTotal();
